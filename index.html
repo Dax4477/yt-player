@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    input {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #1a73e8;
+      color: white;
+    }
+    button:hover {
+      background: #0b5ed7;
+    }
+    iframe {
+      margin-top: 20px;
+      width: 80%;
+      height: 450px;
+      border-radius: 12px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouTube Video / Live Player</h1>
+  
+  <input type="text" id="youtubeUrl" placeholder="Paste YouTube video or channel URL">
+  <br>
+  <button onclick="playVideo()">Play</button>
+  <button onclick="clearVideo()">Clear</button>
+  
+  <div id="player"></div>
+  
+  <script>
+    async function loadLastUrl() {
+      try {
+        const res = await fetch("/api/latest");
+        const data = await res.json();
+        if (data.url) {
+          const embedUrl = getEmbedUrl(data.url);
+          if (embedUrl) {
+            document.getElementById("player").innerHTML =
+              `<iframe id="ytframe" src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            requestFullscreen();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load last URL", e);
+      }
+    }
+
+    function getEmbedUrl(url) {
+      let embedUrl = "";
+      try {
+        if (url.includes("watch?v=")) {
+          let videoId = url.split("v=")[1].split("&")[0];
+          embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        } else if (url.includes("channel/")) {
+          let channelId = url.split("channel/")[1].split("/")[0];
+          embedUrl = `https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=1`;
+        } else if (url.includes("embed/")) {
+          embedUrl = url;
+        }
+      } catch (e) {
+        console.error("Invalid YouTube URL", e);
+      }
+      return embedUrl;
+    }
+
+    async function playVideo() {
+      const url = document.getElementById("youtubeUrl").value.trim();
+      const embedUrl = getEmbedUrl(url);
+
+      if (embedUrl) {
+        document.getElementById("player").innerHTML =
+          `<iframe id="ytframe" src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+        requestFullscreen();
+
+        try {
+          await fetch("/api/latest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url })
+          });
+        } catch (e) {
+          console.error("Failed to save URL", e);
+        }
+      } else {
+        alert("Invalid YouTube URL!");
+      }
+    }
+
+    function clearVideo() {
+      document.getElementById("player").innerHTML = "";
+      document.getElementById("youtubeUrl").value = "";
+    }
+
+    function requestFullscreen() {
+      const iframe = document.getElementById("ytframe");
+      if (iframe && iframe.requestFullscreen) {
+        iframe.requestFullscreen();
+      } else if (iframe && iframe.webkitRequestFullscreen) {
+        iframe.webkitRequestFullscreen();
+      } else if (iframe && iframe.msRequestFullscreen) {
+        iframe.msRequestFullscreen();
+      }
+    }
+
+    loadLastUrl();
+  </script>
+</body>
+</html>
