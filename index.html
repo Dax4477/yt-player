@@ -22,7 +22,7 @@
       const url = document.getElementById("youtubeUrl").value.trim();
       if (!url) return alert("Enter a URL!");
 
-      await fetch("/api/video", {
+      await fetch("/api/video.js", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
