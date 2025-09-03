@@ -28,7 +28,7 @@
     }
 
     async function loadVideo() {
-      const res = await fetch("/api/video");
+      const res = await fetch("/api/video.js");
       const data = await res.json();
       const embedUrl = getEmbedUrl(data.url);
 
