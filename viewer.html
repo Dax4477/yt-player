@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Viewer</title>
+  <style>
+    body, html { margin:0; padding:0; background:black; height:100%; overflow:hidden; }
+    iframe { width:100vw; height:100vh; border:none; }
+  </style>
+</head>
+<body>
+  <div id="player"></div>
+
+  <script>
+    function getEmbedUrl(url) {
+      if (!url) return "";
+      if (url.includes("watch?v=")) {
+        let videoId = url.split("v=")[1].split("&")[0];
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=0`;
+      } else if (url.includes("channel/")) {
+        let channelId = url.split("channel/")[1].split("/")[0];
+        return `https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=1&rel=0&modestbranding=1&controls=0`;
+      } else if (url.includes("embed/")) {
+        return url + "?autoplay=1&rel=0&modestbranding=1&controls=0";
+      }
+      return "";
+    }
+
+    async function loadVideo() {
+      const res = await fetch("/api/video");
+      const data = await res.json();
+      const embedUrl = getEmbedUrl(data.url);
+
+      if (embedUrl) {
+        document.getElementById("player").innerHTML =
+          `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      }
+    }
+
+    loadVideo();
+    setInterval(loadVideo, 5000); // refresh every 5 seconds
+  </script>
+</body>
+</html>
